@@ -1,3 +1,4 @@
+
 name: Terraform Deploy
 
 on:
@@ -7,17 +8,18 @@ on:
   workflow_dispatch:
 
 permissions:
-  id-token: write
   contents: read
 
 env:
   AWS_REGION: eu-west-2
-  IF_VERSION: latest
+  TF_VAR_aws_region: eu-west-2
+  TF_IN_AUTOMATION: "true"
 
 jobs:
   terraform:
     name: Terraform Plan and Apply
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout repository
@@ -26,7 +28,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: ${{ env.IF_VERSION}}
+          terraform_version: latest
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -37,10 +39,9 @@ jobs:
 
       - name: Check AWS identity
         run: aws sts get-caller-identity
-        
 
       - name: Terraform Init
-        run: terraform init 
+        run: terraform init -input=false
 
       - name: Terraform Format Check
         run: terraform fmt -check -recursive
@@ -49,7 +50,7 @@ jobs:
         run: terraform validate
 
       - name: Terraform Plan
-        run: terraform plan
+        run: terraform plan -input=false -out=tfplan
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve
+        run: terraform apply -input=false -auto-approve tfplan
