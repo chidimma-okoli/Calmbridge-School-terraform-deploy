@@ -161,7 +161,17 @@ resource "aws_route_table_association" "database_rt_ass" {
 
 
 # NAT Gateway lives in the PUBLIC subnet
+
+resource "aws_eip" "nat_eip" {
+  domain = "vpc"
+
+  tags = {
+    Name = "${var.project_name}-nat-eip"
+  }
+}
+
 resource "aws_nat_gateway" "cally_ng" {
+  allocation_id = aws_eip.nat_eip.id
   subnet_id = aws_subnet.cally_public_subnet.id
 
   depends_on = [
