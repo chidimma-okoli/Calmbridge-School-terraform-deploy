@@ -1,19 +1,20 @@
 name: Terraform Destroy
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
-  id-token: write
   contents: read
+
+concurrency:
+  group: terraform-destroy
+  cancel-in-progress: false
 
 jobs:
   destroy:
     name: Terraform Destroy
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     steps:
       - name: Checkout repository
@@ -30,11 +31,10 @@ jobs:
           aws-region: eu-west-2
 
       - name: Terraform Init
-        run: terraform init -reconfigure
+        run: terraform init -input=false
 
       - name: Terraform Validate
         run: terraform validate
 
-
       - name: Terraform Destroy
-        run: terraform destroy -auto-approve
+        run: terraform destroy -input=false -auto-approve
